@@ -1,0 +1,1 @@
+ALTER TABLE Propensities ADD COLUMN zip_or_postal_code VARCHAR(20);

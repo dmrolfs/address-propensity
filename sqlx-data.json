@@ -1,0 +1,350 @@
+{
+  "db": "PostgreSQL",
+  "4506b2c0217cfe55fd0cef372eb98bc52586608e0a2e8e3f6437fce131044850": {
+    "query": "\n            SELECT\n                id,\n                apn,\n                street_number,\n                street_pre_direction,\n                street_name,\n                street_suffix,\n                street_post_direction,\n                secondary_designator,\n                secondary_number,\n                city,\n                state_or_region,\n                zip_or_postal_code,\n                latitude,\n                longitude,\n                admin_division,\n                land_use_type,\n                area_sq_ft,\n                nr_bedrooms,\n                nr_bathrooms,\n                total_area_sq_ft,\n                created_on,\n                last_updated_on\n            FROM properties\n            WHERE apn = $1\n            LIMIT 1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "apn",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "street_number",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "street_pre_direction",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "street_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 5,
+          "name": "street_suffix",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 6,
+          "name": "street_post_direction",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 7,
+          "name": "secondary_designator",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 8,
+          "name": "secondary_number",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 9,
+          "name": "city",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 10,
+          "name": "state_or_region",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 11,
+          "name": "zip_or_postal_code",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 12,
+          "name": "latitude",
+          "type_info": "Numeric"
+        },
+        {
+          "ordinal": 13,
+          "name": "longitude",
+          "type_info": "Numeric"
+        },
+        {
+          "ordinal": 14,
+          "name": "admin_division",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 15,
+          "name": "land_use_type",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 16,
+          "name": "area_sq_ft",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 17,
+          "name": "nr_bedrooms",
+          "type_info": "Int2"
+        },
+        {
+          "ordinal": 18,
+          "name": "nr_bathrooms",
+          "type_info": "Numeric"
+        },
+        {
+          "ordinal": 19,
+          "name": "total_area_sq_ft",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 20,
+          "name": "created_on",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 21,
+          "name": "last_updated_on",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ]
+    }
+  },
+  "8e1aad4b44083466f098b7c0d9c81497930ce0499a4fe4637d57d38132039d12": {
+    "query": "\n            SELECT id, apn, score, zip_or_postal_code\n            FROM propensities\n            WHERE apn = $1\n            LIMIT 1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "apn",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "score",
+          "type_info": "Int2"
+        },
+        {
+          "ordinal": 3,
+          "name": "zip_or_postal_code",
+          "type_info": "Varchar"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        true
+      ]
+    }
+  },
+  "ba547254fc74fd206d058a3f0913e218f9c16d677ed47550f4bb509e3884e3c6": {
+    "query": "\n            INSERT INTO Propensities (id, apn, zip_or_postal_code, score, created_on, last_updated_on)\n            VALUES(DEFAULT, $1, $2, $3, $4, $5)\n            RETURNING id\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          "Int2",
+          "Timestamptz",
+          "Timestamptz"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "babf32ad91203e19e6904dff1d95a81b9330776a6fe6a52fbeeb3ef5a4c7a947": {
+    "query": "\n            INSERT INTO Properties (\n                id,\n                apn,\n                street_number,\n                street_pre_direction,\n                street_name,\n                street_suffix,\n                street_post_direction,\n                secondary_designator,\n                secondary_number,\n                city,\n                state_or_region,\n                zip_or_postal_code,\n                latitude,\n                longitude,\n                admin_division,\n                land_use_type,\n                area_sq_ft,\n                nr_bedrooms,\n                nr_bathrooms,\n                total_area_sq_ft,\n                created_on,\n                last_updated_on\n            )\n            VALUES(DEFAULT, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21 )\n            RETURNING id\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Numeric",
+          "Numeric",
+          "Varchar",
+          "Varchar",
+          "Int4",
+          "Int2",
+          "Numeric",
+          "Int4",
+          "Timestamptz",
+          "Timestamptz"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "fbe740f54ccc50c392ddac4745ec686ce3df275dbc0623affb490d694d68a5ea": {
+    "query": "\n            SELECT Propensities.id, Propensities.apn, Propensities.score, Propensities.zip_or_postal_code as p_zip_or_postal_code,\n                Properties.street_number, Properties.street_pre_direction, Properties.street_name,\n                Properties.street_suffix, Properties.street_post_direction, Properties.secondary_designator,\n                Properties.secondary_number, Properties.city, Properties.state_or_region, Properties.zip_or_postal_code as a_zip_or_postal_code\n            FROM Propensities\n            INNER JOIN Properties\n            ON Propensities.apn = Properties.apn\n            WHERE Propensities.zip_or_postal_code = $1\n            ORDER BY Propensities.score DESC\n            LIMIT $2\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "apn",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "score",
+          "type_info": "Int2"
+        },
+        {
+          "ordinal": 3,
+          "name": "p_zip_or_postal_code",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 4,
+          "name": "street_number",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 5,
+          "name": "street_pre_direction",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 6,
+          "name": "street_name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 7,
+          "name": "street_suffix",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 8,
+          "name": "street_post_direction",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 9,
+          "name": "secondary_designator",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 10,
+          "name": "secondary_number",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 11,
+          "name": "city",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 12,
+          "name": "state_or_region",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 13,
+          "name": "a_zip_or_postal_code",
+          "type_info": "Varchar"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false
+      ]
+    }
+  }
+}
