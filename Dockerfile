@@ -27,5 +27,6 @@ COPY --from=builder /app/target/release/server server
 COPY --from=builder /app/target/release/loader loader
 COPY resources resources
 ENV APP_ENVIRONMENT production
+ENV APP__DATABASE__HOST propensity_postgres
 ENV RUST_LOG info
 #ENTRYPOINT ["./server", "-s", "resources/secrets.yaml"]
