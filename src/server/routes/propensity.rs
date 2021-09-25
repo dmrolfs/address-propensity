@@ -2,7 +2,7 @@ use crate::core::domain::{
     Address, AssessorParcelNumber, DomainError, PropensityScore, PropertyPropensityScoreRepository,
 };
 use crate::server::routes::error_chain_fmt;
-use crate::server::ApplicationBaseUrl;
+// use crate::server::ApplicationBaseUrl;
 use actix_web::http::StatusCode;
 use actix_web::{web, ResponseError};
 use anyhow::Context;
@@ -57,7 +57,6 @@ pub struct PropensitySearchItem {
 #[tracing::instrument(level = "info")]
 pub async fn propensity_search(
     parameters: web::Query<PropensityScoresParameters>, pool: web::Data<PgPool>,
-    _base_url: web::Data<ApplicationBaseUrl>,
 ) -> Result<web::Json<Vec<PropensitySearchItem>>, PropensityRouteError> {
     let zip_code = parameters.zip_code.clone().try_into()?;
     let limit = parameters.limit.unwrap_or(LIMIT_DEFAULT);

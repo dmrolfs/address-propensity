@@ -1,5 +1,4 @@
 FROM lukemathwalker/cargo-chef:latest-rust-1.55-slim-buster AS chef
-#FROM lukemathwalker/cargo-chef:latest-rust-1.55.0 AS chef
 WORKDIR /app
 
 FROM chef AS planner
@@ -14,8 +13,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 ENV SQLX_OFFLINE true
 # Build our project
-RUN cargo build --release --bin server
-RUN cargo build --release --bin loader
+RUN cargo build --release
 
 FROM debian:buster-slim AS runtime
 WORKDIR /app
@@ -29,4 +27,5 @@ COPY --from=builder /app/target/release/server server
 COPY --from=builder /app/target/release/loader loader
 COPY resources resources
 ENV APP_ENVIRONMENT production
-#ENTRYPOINT ["./server -s ./resources/secrets.yaml"]
+ENV RUST_LOG info
+#ENTRYPOINT ["./server", "-s", "resources/secrets.yaml"]
