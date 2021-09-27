@@ -67,7 +67,7 @@ pub async fn load_property_data(file: PathBuf, settings: Settings) -> Result<(),
     let mut nr_saved_records: usize = 0;
 
     tracing::info!("loading property records from source file: {:?}", file);
-    eprintln!(" {}...", style("Loading property scores").bold());
+    eprintln!(" {}...", style("Loading property records").bold());
     let sty = ProgressStyle::default_bar()
         .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}")
         .progress_chars("##-");
