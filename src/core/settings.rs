@@ -61,15 +61,15 @@ pub trait SettingsLoader: Debug + Sized {
     where
         Self: DeserializeOwned,
     {
-        tracing::info!(?options, "DMR: loading settings based on CLI options.");
+        tracing::info!(?options, "loading settings based on CLI options.");
         let mut config_builder = config::Config::builder();
         config_builder = Self::load_configuration(config_builder, options.config_path())?;
         config_builder = Self::load_secrets(config_builder, options.secrets_path());
         config_builder = Self::load_environment(config_builder);
         let config = config_builder.build()?;
-        tracing::info!(?config, "DMR: configuration loaded");
+        tracing::info!(?config, "configuration loaded");
         let settings = config.try_into()?;
-        tracing::info!(?settings, "DMR: settings built for application.");
+        tracing::info!(?settings, "settings built for application.");
         Ok(settings)
     }
 

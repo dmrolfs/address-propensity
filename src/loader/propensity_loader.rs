@@ -1,16 +1,25 @@
 use crate::core::domain::property::PropertyRecordRepository;
-use crate::core::domain::{PropertyPropensityScore, PropertyPropensityScoreRepository};
+use crate::core::domain::{
+    PropensityScore, PropertyPropensityScore, PropertyPropensityScoreRepository, ZipOrPostalCode,
+};
 use crate::loader::domain::CsvPropertyPropensityScore;
 use crate::loader::settings::Settings;
 use crate::loader::LoaderError;
+use console::style;
+use indicatif::{ProgressBar, ProgressStyle};
+use plotters::prelude::*;
 use sqlx::PgPool;
+use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fmt;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use validator::{Validate, ValidationErrors};
 
 #[derive(Default)]
 struct QualityMeasure {
+    pub propensity_zips: Vec<(PropensityScore, Option<ZipOrPostalCode>)>,
     pub deserialization_failures: Vec<(usize, anyhow::Error)>,
     pub validation_failures: Vec<(usize, ValidationErrors)>,
     pub save_failures: Vec<(CsvPropertyPropensityScore, anyhow::Error)>,
@@ -44,8 +53,13 @@ impl fmt::Debug for QualityMeasure {
                 result = f.write_str(format!("\n\t{} missing scores", self.missing_scores.len()).as_str());
             }
             if !self.not_in_core_properties.is_empty() {
-                result =
-                    f.write_str(format!("\n\t{} not in core properties", self.not_in_core_properties.len()).as_str());
+                result = f.write_str(
+                    format!(
+                        "\n\t{} not in core properties (but still loaded)",
+                        self.not_in_core_properties.len()
+                    )
+                    .as_str(),
+                );
             }
 
             result
@@ -56,13 +70,14 @@ impl fmt::Debug for QualityMeasure {
 }
 
 //todo: there's likely similarity between property loading and propensity loading. Future work to unify.
-#[tracing::instrument(level = "info")]
+#[tracing::instrument(level = "info", skip(settings))]
 pub async fn load_propensity_data(
     file: PathBuf, distribution: Option<PathBuf>, settings: Settings,
 ) -> Result<(), LoaderError> {
     let mut reader = csv::Reader::from_path(&file)?;
     let mut quality = QualityMeasure::default();
     let mut skipped_records = vec![];
+    let nr_records = count_nr_records(&file)?;
 
     let connection_pool = crate::core::get_connection_pool(&settings.database)
         .await
@@ -72,8 +87,19 @@ pub async fn load_propensity_data(
     let mut nr_saved_records: usize = 0;
 
     tracing::info!("loading propensity records from source file: {:?}", file);
+    eprintln!(" {}...", style("Loading propensity scores").bold());
+    let sty = ProgressStyle::default_bar()
+        .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}")
+        .progress_chars("##-");
+
+    let progress = ProgressBar::new(nr_records as u64);
+    progress.set_style(sty);
+
     for (pos, record) in reader.deserialize().enumerate() {
         let idx = pos + 1;
+        progress.set_message(format!("record #{}", idx));
+        progress.inc(1);
+
         let record: Result<CsvPropertyPropensityScore, csv::Error> = record;
         let ingress = match record {
             Ok(ref property_propensity) => {
@@ -148,16 +174,16 @@ pub async fn load_propensity_data(
             nr_saved_records += 1;
         }
     }
+    progress.finish_with_message("done");
 
-    tracing::warn!(
-        "Saved {} records from {:?} ({} skipped) with {:?}",
-        nr_saved_records,
-        file,
-        skipped_records.len(),
-        quality
-    );
-
+    summarize(nr_saved_records, &file, &skipped_records, &quality);
     Ok(())
+}
+
+#[tracing::instrument(level = "info")]
+fn count_nr_records(path: &PathBuf) -> Result<usize, LoaderError> {
+    let reader = BufReader::new(File::open(path)?);
+    Ok(reader.lines().count() - 1) // subtract header line
 }
 
 #[tracing::instrument(level = "info", skip(pool, csv_record, quality, skipped_records,))]
@@ -173,6 +199,9 @@ async fn save_record(
         }
 
         Ok(Some(record)) => {
+            quality
+                .propensity_zips
+                .push((record.score, record.zip_or_postal_code.clone()));
             tracing::info!(apn=?record.apn, "propensity record[{}] previously loaded - skipping", index);
             skipped_records.push(index);
             false
@@ -188,6 +217,9 @@ async fn save_record(
 
             match do_save(pool, record, index).await {
                 Ok(_score) => {
+                    quality
+                        .propensity_zips
+                        .push((record.score, record.zip_or_postal_code.clone()));
                     tracing::info!("saved property propensity score");
                     true
                 }
@@ -227,4 +259,125 @@ async fn do_save(
 async fn do_assess_for_property(pool: &PgPool, record: &PropertyPropensityScore) -> Result<bool, LoaderError> {
     let result = PropertyRecordRepository::find(&record.apn, pool).await?;
     Ok(result.is_some())
+}
+
+#[tracing::instrument(level = "info", skip(nr_saved_records, file, skipped, quality))]
+fn summarize(nr_saved_records: usize, file: &PathBuf, skipped: &[usize], quality: &QualityMeasure) {
+    eprintln!(
+        " {}",
+        style(format!(
+            "Saved {} records from {:?} ({} skipped) with {:?}",
+            nr_saved_records,
+            file,
+            skipped.len(),
+            quality
+        ))
+        .bold()
+    );
+    tracing::warn!(
+        "Saved {} records from {:?} ({} skipped) with {:?}",
+        nr_saved_records,
+        file,
+        skipped.len(),
+        quality
+    );
+
+    visualize_score_distribution(&quality.propensity_zips).expect("Failed to save propensity_score_distribution.png");
+    visualize_zipcode_scores(&quality.propensity_zips).expect("Failed to save score_zipcode_distribution.png");
+}
+
+#[tracing::instrument(level = "info", skip(score_zips))]
+fn visualize_score_distribution(score_zips: &Vec<(PropensityScore, Option<ZipOrPostalCode>)>) -> anyhow::Result<()> {
+    let out_filename = "propensity_score_distribution.png";
+    let scores: Vec<u32> = score_zips.iter().map(|(s, _)| s.score as u32).collect();
+
+    let background = BitMapBackend::new(out_filename, (640, 480)).into_drawing_area();
+    background.fill(&WHITE)?;
+    let mut chart = ChartBuilder::on(&background)
+        .x_label_area_size(35)
+        .y_label_area_size(40)
+        .margin(5)
+        .caption("Propensity Score Distribution", ("sans-serif", 50.0))
+        .build_cartesian_2d((0_u32..950).into_segmented(), 0_u32..100_u32)?;
+
+    chart
+        .configure_mesh()
+        .disable_x_mesh()
+        .bold_line_style(&WHITE.mix(0.3))
+        .y_desc("Count")
+        .x_desc("Score")
+        .axis_desc_style(("sans-serif", 15))
+        .draw()?;
+
+    chart.draw_series(
+        Histogram::vertical(&chart)
+            .style(RED.mix(0.5).filled())
+            .data(scores.iter().map(|x| (*x, 1))),
+    )?;
+
+    background.present().expect("Unable to write result to file");
+    eprintln!(
+        " {}.",
+        style(format!("Propensity score visualization was saved to {}", out_filename)).bold()
+    );
+    Ok(())
+}
+
+#[tracing::instrument(level = "info", skip(score_zips))]
+fn visualize_zipcode_scores(score_zips: &Vec<(PropensityScore, Option<ZipOrPostalCode>)>) -> anyhow::Result<()> {
+    let out_filename = "score_zipcode_distribution.png";
+    let mut zip_counts: HashMap<String, u32> = HashMap::default();
+    for (_score, zip) in score_zips.iter() {
+        if let Some(z) = zip {
+            let count = zip_counts.get(z.as_ref()).copied().unwrap_or(0);
+            zip_counts.insert(z.to_string(), count + 1);
+        }
+    }
+    let mut x_counts = vec![];
+    let mut y_counts: HashMap<u32, u32> = HashMap::default();
+    for (_, zip_count) in zip_counts {
+        x_counts.push(zip_count);
+        let y_count = y_counts.get(&zip_count).copied().unwrap_or(0);
+        y_counts.insert(zip_count, y_count + 1);
+    }
+    let x_max = x_counts.iter().max().copied().unwrap_or(0);
+    let x_min = x_counts.iter().min().copied().unwrap_or(0);
+    let y_max = y_counts.iter().map(|(_, count)| count).max().copied().unwrap_or(0);
+    let y_min = y_counts.iter().map(|(_, count)| count).min().copied().unwrap_or(0);
+    tracing::warn!(%x_max, %x_min, %y_min, %y_max, nr_counts=%x_counts.len(), "zipcode viz tallies");
+
+    let background = BitMapBackend::new(out_filename, (640, 480)).into_drawing_area();
+    background.fill(&WHITE)?;
+    let mut chart = ChartBuilder::on(&background)
+        .x_label_area_size(35)
+        .y_label_area_size(40)
+        .margin(5)
+        .caption("Propensity Zipcode Distribution", ("sans-serif", 50.0))
+        .build_cartesian_2d((0..x_max).into_segmented(), 0..y_max)?;
+
+    chart
+        .configure_mesh()
+        .disable_x_mesh()
+        .bold_line_style(&WHITE.mix(0.3))
+        .y_desc("# of Zipcodes")
+        .x_desc("# Scores in Zipcode")
+        .axis_desc_style(("sans-serif", 15))
+        .draw()?;
+
+    chart.draw_series(
+        Histogram::vertical(&chart)
+            .style(RED.mix(0.5).filled())
+            .data(x_counts.into_iter().map(|x| (x, 1))),
+    )?;
+
+    background.present().expect("Unable to write result ro file");
+    eprintln!(
+        " {}.",
+        style(format!(
+            "Zipcode propensity population visualization was save to {}",
+            out_filename
+        ))
+        .bold()
+    );
+    Ok(())
 }

@@ -19,9 +19,13 @@ bigdecimal = { version = "0.2.2", features = ["serde"] }
 clap = { version = "3.0.0-beta.4" }
 chrono = "*"
 config = { git = "https://github.com/dmrolfs/config-rs" }
+console = "*"
 csv = "*"
 enum-display-derive = "*"
+indicatif="*"
+itertools = "*"
 lazy_static = "*"
+plotters="*"
 regex = "*"
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"

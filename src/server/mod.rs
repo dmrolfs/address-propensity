@@ -30,7 +30,7 @@ impl Application {
         let address = format!("{}:{}", settings.application.host, settings.application.port);
         let listener = TcpListener::bind(&address)?;
         let port = listener.local_addr().unwrap().port();
-        let server = run(listener, connection_pool, /*settings.application.base_url*/)?;
+        let server = run(listener, connection_pool /*settings.application.base_url*/)?;
         Ok(Self { port, server })
     }
 
@@ -43,7 +43,7 @@ impl Application {
     }
 }
 
-fn run(listener: TcpListener, db_pool: PgPool, /*base_url: String*/) -> Result<Server, std::io::Error> {
+fn run(listener: TcpListener, db_pool: PgPool /*base_url: String*/) -> Result<Server, std::io::Error> {
     let db_pool = Data::new(db_pool);
     // let base_url = Data::new(ApplicationBaseUrl(base_url));
     let server = HttpServer::new(move || {
@@ -52,7 +52,7 @@ fn run(listener: TcpListener, db_pool: PgPool, /*base_url: String*/) -> Result<S
             .route("/propensity", web::get().to(routes::propensity_search))
             .route("/health_check", web::get().to(routes::health_check))
             .app_data(db_pool.clone())
-            // .app_data(base_url.clone())
+        // .app_data(base_url.clone())
     })
     .listen(listener)?
     .run();
