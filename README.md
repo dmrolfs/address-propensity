@@ -95,12 +95,11 @@ are supported:
 
 For example to query the top three propensity scores for the 98121 zipcode:
 
-    <code>curl --location --request GET '127.0.0.1:8000/propensity?zip_code=98121&limit=3'</code>
+    <code>curl --request GET '127.0.0.1:8000/propensity?zip_code=98121&limit=3'</code>
 
 returns
 
-<pre><code>
-[
+<pre><code>[
     {
         "apn": "00006633050420",
         "score": 259,
@@ -152,31 +151,6 @@ returns
         }
     },
     {
-        "apn": "00000254801470",
-        "score": 166,
-        "address": {
-            "address_line": {
-                "street_number": "121",
-                "street_name": "VINE",
-                "street_suffix": "ST",
-                "street_direction": "None"
-            },
-            "secondary_address_line": {
-                "designator": "UNIT",
-                "number": "2405"
-            },
-            "city": "SEATTLE",
-            "state_or_region": "WA",
-            "zip_or_postal_code": {
-                "code": "98121"
-            },
-            "locale": {
-                "iso_3166_alpha_3": "USA",
-                "official_name": "UNITED STATES OF AMERICA"
-            }
-        }
-    },
-    {
         "apn": "00003589004180",
         "score": 166,
         "address": {
@@ -200,159 +174,8 @@ returns
                 "official_name": "UNITED STATES OF AMERICA"
             }
         }
-    },
-    {
-        "apn": "00003589001880",
-        "score": 145,
-        "address": {
-            "address_line": {
-                "street_number": "588",
-                "street_name": "BELL",
-                "street_suffix": "ST",
-                "street_direction": "None"
-            },
-            "secondary_address_line": {
-                "designator": "UNIT",
-                "number": "1803S"
-            },
-            "city": "SEATTLE",
-            "state_or_region": "WA",
-            "zip_or_postal_code": {
-                "code": "98121"
-            },
-            "locale": {
-                "iso_3166_alpha_3": "USA",
-                "official_name": "UNITED STATES OF AMERICA"
-            }
-        }
-    },
-    {
-        "apn": "00008946351160",
-        "score": 143,
-        "address": {
-            "address_line": {
-                "street_number": "2607",
-                "street_name": "WESTERN",
-                "street_suffix": "AVE",
-                "street_direction": "None"
-            },
-            "secondary_address_line": {
-                "designator": "APT",
-                "number": "607"
-            },
-            "city": "SEATTLE",
-            "state_or_region": "WA",
-            "zip_or_postal_code": {
-                "code": "98121"
-            },
-            "locale": {
-                "iso_3166_alpha_3": "USA",
-                "official_name": "UNITED STATES OF AMERICA"
-            }
-        }
-    },
-    {
-        "apn": "00003589003800",
-        "score": 142,
-        "address": {
-            "address_line": {
-                "street_number": "583",
-                "street_name": "BATTERY",
-                "street_suffix": "ST",
-                "street_direction": "None"
-            },
-            "secondary_address_line": {
-                "designator": "APT",
-                "number": "306"
-            },
-            "city": "SEATTLE",
-            "state_or_region": "WA",
-            "zip_or_postal_code": {
-                "code": "98121"
-            },
-            "locale": {
-                "iso_3166_alpha_3": "USA",
-                "official_name": "UNITED STATES OF AMERICA"
-            }
-        }
-    },
-    {
-        "apn": "00003589000310",
-        "score": 119,
-        "address": {
-            "address_line": {
-                "street_number": "588",
-                "street_name": "BELL",
-                "street_suffix": "ST",
-                "street_direction": "None"
-            },
-            "secondary_address_line": {
-                "designator": "UNIT",
-                "number": "312S"
-            },
-            "city": "SEATTLE",
-            "state_or_region": "WA",
-            "zip_or_postal_code": {
-                "code": "98121"
-            },
-            "locale": {
-                "iso_3166_alpha_3": "USA",
-                "official_name": "UNITED STATES OF AMERICA"
-            }
-        }
-    },
-    {
-        "apn": "00001843050490",
-        "score": 113,
-        "address": {
-            "address_line": {
-                "street_number": "2033",
-                "street_name": "2",
-                "street_suffix": "AVE",
-                "street_direction": "None"
-            },
-            "secondary_address_line": {
-                "designator": "APT",
-                "number": "902"
-            },
-            "city": "SEATTLE",
-            "state_or_region": "WA",
-            "zip_or_postal_code": {
-                "code": "98121"
-            },
-            "locale": {
-                "iso_3166_alpha_3": "USA",
-                "official_name": "UNITED STATES OF AMERICA"
-            }
-        }
-    },
-    {
-        "apn": "00005607950800",
-        "score": 104,
-        "address": {
-            "address_line": {
-                "street_number": "425",
-                "street_name": "VINE",
-                "street_suffix": "ST",
-                "street_direction": "None"
-            },
-            "secondary_address_line": {
-                "designator": "APT",
-                "number": "524"
-            },
-            "city": "SEATTLE",
-            "state_or_region": "WA",
-            "zip_or_postal_code": {
-                "code": "98121"
-            },
-            "locale": {
-                "iso_3166_alpha_3": "USA",
-                "official_name": "UNITED STATES OF AMERICA"
-            }
-        }
     }
-]
-</code></pre>
+]</code></pre>
 
 ### health check
 The endpoint also has a simple health check service that can be used to verify the server is up and 
