@@ -1,3 +1,6 @@
+- refactor docker demo to move loader to Database.Dockerfile
+- - enable to return main (API server) Dockerfile to minimal definition; i.e., more PROD-like
+- - loader executable has different dependencies (e.g., for visualization generation) and since used on a local env, the temporary, fatter database initialization container is a better fit.
 - refractor to unify *_loader modules
 - batch processing
 - - configurable batch sizing
