@@ -14,7 +14,7 @@ impl SettingsLoader for Settings {
 }
 
 #[derive(Clap, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[clap(version = "0.1.0", author = "Damon Rolfs")]
+#[clap(version = "0.1.1", author = "Damon Rolfs")]
 #[clap(setting = AppSettings::ColoredHelp)]
 pub struct LoaderCliOptions {
     /// Override environment-based configuration file to load.
@@ -43,7 +43,7 @@ impl LoadingOptions for LoaderCliOptions {
 }
 
 #[derive(Clap, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[clap(version = "0.1.0", author = "Damon Rolfs")]
+#[clap(version = "0.1.1", author = "Damon Rolfs")]
 #[clap(setting = AppSettings::ColoredHelp)]
 pub enum SubCommand {
     /// Specify path to property data file in CSV format
@@ -64,9 +64,9 @@ pub enum SubCommand {
         #[clap(name = "FILE", parse(from_os_str), value_hint = ValueHint::AnyPath)]
         file: PathBuf,
 
-        /// Specify file to output propensity distribution visualization
-        #[clap(short, long, parse(from_os_str), value_hint = ValueHint::FilePath)]
-        distribution: Option<PathBuf>,
+        // /// Specify file to output propensity distribution visualization
+        // #[clap(short, long, parse(from_os_str), value_hint = ValueHint::FilePath)]
+        // distribution: Option<PathBuf>,
     },
 }
 
@@ -74,7 +74,7 @@ impl fmt::Display for SubCommand {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let label = match self {
             Self::Property { file: _ } => "property",
-            Self::Propensity { file: _, distribution: _ } => "distribution",
+            Self::Propensity { file: _ } => "propensity",
         };
 
         write!(f, "{}", label)

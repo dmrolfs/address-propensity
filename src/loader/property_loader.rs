@@ -2,8 +2,6 @@ use crate::core::domain::property::{Property, PropertyRecordRepository};
 use crate::loader::domain::CsvProperty;
 use crate::loader::settings::Settings;
 use crate::loader::LoaderError;
-use console::style;
-use indicatif::{ProgressBar, ProgressStyle};
 use sqlx::PgPool;
 use std::convert::TryInto;
 use std::fmt;
@@ -11,6 +9,8 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use validator::{Validate, ValidationErrors};
+use progressing::mapping::{Bar as MappingBar};
+use progressing::Baring;
 
 #[derive(Default)]
 struct QualityMeasure {
@@ -67,18 +67,22 @@ pub async fn load_property_data(file: PathBuf, settings: Settings) -> Result<(),
     let mut nr_saved_records: usize = 0;
 
     tracing::info!("loading property records from source file: {:?}", file);
-    eprintln!(" {}...", style("Loading property records").bold());
-    let sty = ProgressStyle::default_bar()
-        .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}")
-        .progress_chars("##-");
-
-    let progress = ProgressBar::new(nr_records as u64);
-    progress.set_style(sty);
+    eprintln!(" {}...", "Loading property records");
+    // let sty = ProgressStyle::default_bar()
+    //     .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}")
+    //     .progress_chars("##-");
+    //
+    // let progress = ProgressBar::new(nr_records as u64);
+    // progress.set_style(sty);
+    let mut progress = MappingBar::with_range(0, nr_records).timed();
+    progress.set_len(100);
 
     for (pos, record) in reader.deserialize().enumerate() {
         let idx = pos + 1;
-        progress.set_message(format!("record #{}", idx));
-        progress.inc(1);
+        // progress.set_message(format!("record #{}", idx));
+        // progress.inc(1);
+        progress.set(idx);
+        eprintln!("{}", progress);
 
         let ingress: CsvProperty = match record {
             Ok(property) => property,
@@ -126,7 +130,7 @@ pub async fn load_property_data(file: PathBuf, settings: Settings) -> Result<(),
             nr_saved_records += 1;
         }
     }
-    progress.finish_with_message("done");
+    // progress.finish_with_message("done");
 
     summarize(nr_saved_records, &file, &skipped_records, &quality);
     Ok(())
@@ -136,14 +140,13 @@ pub async fn load_property_data(file: PathBuf, settings: Settings) -> Result<(),
 fn summarize(nr_saved_records: usize, file: &PathBuf, skipped: &[usize], quality: &QualityMeasure) {
     eprintln!(
         " {}",
-        style(format!(
+        format!(
             "Saved {} records from {:?} ({} skipped) with {:?}",
             nr_saved_records,
             file,
             skipped.len(),
             quality
-        ))
-        .bold()
+        )
     );
     tracing::warn!(
         "Saved {} records from {:?} ({} skipped) with {:?}",
@@ -155,15 +158,7 @@ fn summarize(nr_saved_records: usize, file: &PathBuf, skipped: &[usize], quality
 
     if !skipped.is_empty() {
         let first: Vec<usize> = skipped.iter().take(10).copied().collect();
-        eprintln!(
-            " {}",
-            style(format!(
-                "indexes of first {} skipped csv records: {:?}",
-                first.len(),
-                first
-            ))
-            .bold()
-        );
+        eprintln!(" {}", format!("indexes of first {} skipped csv records: {:?}", first.len(), first));
     }
 }
 

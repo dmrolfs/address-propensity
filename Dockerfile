@@ -1,4 +1,5 @@
-FROM lukemathwalker/cargo-chef:latest-rust-1.55-slim-buster AS chef
+#FROM lukemathwalker/cargo-chef:latest-rust-1.55-slim-buster AS chef
+FROM lukemathwalker/cargo-chef:latest-rust-1.55 AS chef
 WORKDIR /app
 
 FROM chef AS planner
@@ -15,7 +16,7 @@ ENV SQLX_OFFLINE true
 # Build our project
 RUN cargo build --release
 
-FROM debian:buster-slim AS runtime
+FROM rust:1.55 AS runtime
 WORKDIR /app
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends openssl \

@@ -5,8 +5,6 @@ use crate::core::domain::{
 use crate::loader::domain::CsvPropertyPropensityScore;
 use crate::loader::settings::Settings;
 use crate::loader::LoaderError;
-use console::style;
-use indicatif::{ProgressBar, ProgressStyle};
 use plotters::prelude::*;
 use sqlx::PgPool;
 use std::collections::HashMap;
@@ -16,6 +14,8 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use validator::{Validate, ValidationErrors};
+use progressing::mapping::{Bar as MappingBar};
+use progressing::Baring;
 
 #[derive(Default)]
 struct QualityMeasure {
@@ -71,9 +71,7 @@ impl fmt::Debug for QualityMeasure {
 
 //todo: there's likely similarity between property loading and propensity loading. Future work to unify.
 #[tracing::instrument(level = "info", skip(settings))]
-pub async fn load_propensity_data(
-    file: PathBuf, distribution: Option<PathBuf>, settings: Settings,
-) -> Result<(), LoaderError> {
+pub async fn load_propensity_data(file: PathBuf, settings: Settings,) -> Result<(), LoaderError> {
     let mut reader = csv::Reader::from_path(&file)?;
     let mut quality = QualityMeasure::default();
     let mut skipped_records = vec![];
@@ -87,18 +85,21 @@ pub async fn load_propensity_data(
     let mut nr_saved_records: usize = 0;
 
     tracing::info!("loading propensity records from source file: {:?}", file);
-    eprintln!(" {}...", style("Loading propensity scores").bold());
-    let sty = ProgressStyle::default_bar()
-        .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}")
-        .progress_chars("##-");
-
-    let progress = ProgressBar::new(nr_records as u64);
-    progress.set_style(sty);
+    eprintln!(" {}...", "Loading propensity scores");
+    // let sty = ProgressStyle::default_bar()
+    //     .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}")
+    //     .progress_chars("##-");
+    //
+    // let progress = ProgressBar::new(nr_records as u64);
+    // progress.set_style(sty);
+    let mut progress = MappingBar::with_range(0, nr_records).timed();
+    progress.set_len(100);
 
     for (pos, record) in reader.deserialize().enumerate() {
         let idx = pos + 1;
-        progress.set_message(format!("record #{}", idx));
-        progress.inc(1);
+        // progress.set_message(format!("record #{}", idx));
+        progress.set(idx);
+        eprintln!("{}", progress);
 
         let record: Result<CsvPropertyPropensityScore, csv::Error> = record;
         let ingress = match record {
@@ -174,7 +175,7 @@ pub async fn load_propensity_data(
             nr_saved_records += 1;
         }
     }
-    progress.finish_with_message("done");
+    // progress.finish_with_message("done");
 
     summarize(nr_saved_records, &file, &skipped_records, &quality);
     Ok(())
@@ -265,14 +266,13 @@ async fn do_assess_for_property(pool: &PgPool, record: &PropertyPropensityScore)
 fn summarize(nr_saved_records: usize, file: &PathBuf, skipped: &[usize], quality: &QualityMeasure) {
     eprintln!(
         " {}",
-        style(format!(
+        format!(
             "Saved {} records from {:?} ({} skipped) with {:?}",
             nr_saved_records,
             file,
             skipped.len(),
             quality
-        ))
-        .bold()
+        )
     );
     tracing::warn!(
         "Saved {} records from {:?} ({} skipped) with {:?}",
@@ -316,10 +316,7 @@ fn visualize_score_distribution(score_zips: &Vec<(PropensityScore, Option<ZipOrP
     )?;
 
     background.present().expect("Unable to write result to file");
-    eprintln!(
-        " {}.",
-        style(format!("Propensity score visualization was saved to {}", out_filename)).bold()
-    );
+    eprintln!(" {}.", format!("Propensity score visualization was saved to {}", out_filename));
     Ok(())
 }
 
@@ -371,13 +368,6 @@ fn visualize_zipcode_scores(score_zips: &Vec<(PropensityScore, Option<ZipOrPosta
     )?;
 
     background.present().expect("Unable to write result ro file");
-    eprintln!(
-        " {}.",
-        style(format!(
-            "Zipcode propensity population visualization was save to {}",
-            out_filename
-        ))
-        .bold()
-    );
+    eprintln!(" {}.", format!("Zipcode propensity population visualization was save to {}", out_filename));
     Ok(())
 }

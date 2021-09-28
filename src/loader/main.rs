@@ -19,8 +19,8 @@ async fn main() {
     let settings = Settings::load(options).expect("failed to load settings");
     match command {
         SubCommand::Property { file } => property_loader::load_property_data(file, settings).await,
-        SubCommand::Propensity { file, distribution } => {
-            propensity_loader::load_propensity_data(file, distribution, settings).await
+        SubCommand::Propensity { file } => {
+            propensity_loader::load_propensity_data(file, settings).await
         }
     }
     .expect(format!("failure in {} loading", command_label).as_str());
