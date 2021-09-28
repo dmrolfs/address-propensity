@@ -1,0 +1,11 @@
+- refractor to unify *_loader modules
+- batch processing
+- - configurable batch sizing
+- async processing
+- bloom filter cache
+- - save cache in tmp or central dir? 
+- - tmp assumes run from single point
+- - central assumes runs are done individually wrt target
+- put orig progress bar back in place
+- - better ux
+- - docker demo issued resolved such that I think progress was not original issue
