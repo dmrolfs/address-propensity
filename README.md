@@ -44,13 +44,13 @@ See <code>./loader help</code> for usage information.
 
 For the 10,000 record files, each command takes about a minute on my laptop. There are a couple of
 techniques that can substantially improve performance:
-    * **Batching Records**: Currently each record is saved in its own transaction. For handling all 
+* **Batching Records**: Currently each record is saved in its own transaction. For handling all 
 records in a single transaction, the <code>loader</code> completes in a few seconds, representing
 potentially a couple orders of magnitude performance improvement. A single transaction is not 
 recommended, however, due to the unbounded size of data files. Industry benchmarks (see Red Book) 
 suggest for tables of the size of Properties, even batches of 25 represent a substantial 
 improvement.
-    * **Caching Previous Identifiers**: We could maintain (or load at start) a bloom filter cache of
+* **Caching Previous Identifiers**: We could maintain (or load at start) a bloom filter cache of
 record identifiers (e.g., APN is a key field). Lookups for potential skips would only need to be 
 done with a cache hit (since bloom filters do not have false negatives). This has the potential
 to dramatically reduce database queries without impacting the re-processing feature.
@@ -83,8 +83,9 @@ stakeholder, this file represents the primary source of record only for propensi
 additional fields, such as related to the address, are secondary and may be inconsistent. 
 Address discrepancies with core property data are not reconciled. While discrepancies in address 
 fields with the core property data undermine confidence in the propensity data source, because it
-is currently out of scope to further evaluate the impact of the data match. See below for one 
-technique to consider for future address match evaluation. Instead, since APN is the key correlating
+is currently unclear how discrepancies translate to propensity score quality, it is not in scope 
+to further assess address deviations from core property data. See below for one technique to assess
+address deviations in the future. Instead, since APN is the key correlating
 identifier, the propensity APN is validated and normalized in the same manner as that for the core 
 property set; i.e., accept numerics with dashes, strip out the dashes and front-pad to 14 character
 length. 
@@ -95,6 +96,13 @@ Because data could be loaded in batches, these records are still loaded into the
 hope they will find a match in the future. Future work is to clean out propensity records that do
 not link to a core property record.
 
+For future consideration: The address fields between the core property and propensity data sets do 
+not match, so direct comparison may be difficult. Instead of trying compare fields, it may be 
+simpler to first normalize addresses at a higher level: the mailing address. If we pull together 
+the address fields for each set to create the mailing address string, we can then use different
+string comparison techniques to evaluate differences; e.g., Levenshtein distance (good relative to
+considering typos) and Hamming distance may be good to measure interpretability between the two sets.
+
 ## server
 The <code>server</code> starts a simple REST endpoint that is used to query sorted (descending) 
 propensity scores by zipcode. The endpoint also has a basic health check function.
@@ -103,8 +111,8 @@ propensity scores by zipcode. The endpoint also has a basic health check functio
 The endpoint returns a sorted array of addresses and their propensity score, sorted from highest to 
 lowest for the given zipcode. The result set size can be limited. The following two query parameters
 are supported: 
-    * required <code>zip</code> or <code>zipcode</code> or <code>zip_code</code>: zipcode to query for scores
-    * optional <code>limit</code>: constrain the result set size
+* required <code>zip</code> or <code>zipcode</code> or <code>zip_code</code>: zipcode to query for scores
+* optional <code>limit</code>: constrain the result set size
 
 For example to query the top three propensity scores for the 98121 zipcode:
 
@@ -451,13 +459,11 @@ Applied 20210921225951/migrate add zipcode to propensity (1.7929ms)
 
 13. From the container's shell, load property data:
 <pre><code>root@:/app# ./loader -s resources/secrets.yaml property resources/data/core_property_data.csv > property_load.log</code></pre>
-start the server.
 You should see progress fill the screen and a summary of the load:
 <pre><code>Saved 10000 records from "resources/data/core_property_data.csv" (0 skipped) with 0 issues found</code></pre>
 
 14. From the container's shell, load propensity data:
 <pre><code>root@:/app# ./loader -s resources/secrets.yaml propensity resources/data/propensity_scores.csv > propensity_load.log</code></pre>
-start the server.
 You should see progress fill the screen and a summary of the load:
 <pre><code>
  Saved 8699 records from "resources/data/propensity_scores.csv" (1301 skipped) with 1301 issues found:
