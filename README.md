@@ -44,6 +44,7 @@ See <code>./loader help</code> for usage information.
 
 For the 10,000 record files, each command takes about a minute on my laptop. There are a couple of
 techniques that can substantially improve performance:
+* **Asynchronous Processing**: The tools used to implement the reading, validation, transformation, and saving data to the database support parallel, asynchronous processing in without blocking - even reading CSV files and database operations. Combining batching and nonn-blocking, asynchronous processing can substantially improved data load times. 
 * **Batching Records**: Currently each record is saved in its own transaction. For handling all 
 records in a single transaction, the <code>loader</code> completes in a few seconds, representing
 potentially a couple orders of magnitude performance improvement. A single transaction is not 
