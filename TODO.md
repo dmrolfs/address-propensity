@@ -12,3 +12,6 @@
 - put orig progress bar back in place
 - - better ux
 - - docker demo issued resolved such that I think progress was not original issue
+- refactor project structure to use cargo workspaces
+- - improves compile time
+- - improves module organization
