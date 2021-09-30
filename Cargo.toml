@@ -30,6 +30,7 @@ regex = "1.5"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_with = { version = "1.10", features = ["chrono", "json", "macros"] }
+settings_loader = { git = "https://github.com/dmrolfs/settings-loader-rs", features = ["http", "database"] }
 sqlx = { version = "0.5", default-features = false, features = ["runtime-actix-rustls", "macros", "postgres", "bigdecimal", "uuid", "chrono", "migrate", "offline"] }
 thiserror = "1.0"
 tokio = { version = "1.12", features = ["full"]}

@@ -6,6 +6,8 @@ use crate::loader::domain::CsvPropertyPropensityScore;
 use crate::loader::settings::Settings;
 use crate::loader::LoaderError;
 use plotters::prelude::*;
+use progressing::mapping::Bar as MappingBar;
+use progressing::Baring;
 use sqlx::PgPool;
 use std::collections::HashMap;
 use std::convert::TryInto;
@@ -14,8 +16,6 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use validator::{Validate, ValidationErrors};
-use progressing::mapping::{Bar as MappingBar};
-use progressing::Baring;
 
 #[derive(Default)]
 struct QualityMeasure {
@@ -71,7 +71,7 @@ impl fmt::Debug for QualityMeasure {
 
 //todo: there's likely similarity between property loading and propensity loading. Future work to unify.
 #[tracing::instrument(level = "info", skip(settings))]
-pub async fn load_propensity_data(file: PathBuf, settings: Settings,) -> Result<(), LoaderError> {
+pub async fn load_propensity_data(file: PathBuf, settings: Settings) -> Result<(), LoaderError> {
     let mut reader = csv::Reader::from_path(&file)?;
     let mut quality = QualityMeasure::default();
     let mut skipped_records = vec![];
@@ -316,7 +316,10 @@ fn visualize_score_distribution(score_zips: &Vec<(PropensityScore, Option<ZipOrP
     )?;
 
     background.present().expect("Unable to write result to file");
-    eprintln!(" {}.", format!("Propensity score visualization was saved to {}", out_filename));
+    eprintln!(
+        " {}.",
+        format!("Propensity score visualization was saved to {}", out_filename)
+    );
     Ok(())
 }
 
@@ -368,6 +371,12 @@ fn visualize_zipcode_scores(score_zips: &Vec<(PropensityScore, Option<ZipOrPosta
     )?;
 
     background.present().expect("Unable to write result ro file");
-    eprintln!(" {}.", format!("Zipcode propensity population visualization was save to {}", out_filename));
+    eprintln!(
+        " {}.",
+        format!(
+            "Zipcode propensity population visualization was save to {}",
+            out_filename
+        )
+    );
     Ok(())
 }

@@ -3,16 +3,13 @@ use std::path::PathBuf;
 use clap::{AppSettings, Clap};
 use serde::{Deserialize, Serialize};
 
-use http_server::ApplicationSettings;
-
-pub use crate::core::settings::error::*;
-use crate::core::settings::{DatabaseSettings, LoadingOptions, SettingsLoader};
-
-pub mod http_server;
+use settings_loader::common::database::DatabaseSettings;
+use settings_loader::common::http::HttpServerSettings;
+use settings_loader::{LoadingOptions, SettingsError, SettingsLoader};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Settings {
-    pub application: ApplicationSettings,
+    pub application: HttpServerSettings,
     pub database: DatabaseSettings,
 }
 
@@ -35,6 +32,8 @@ pub struct HttpServerCliOptions {
 }
 
 impl LoadingOptions for HttpServerCliOptions {
+    type Error = SettingsError;
+
     fn config_path(&self) -> Option<PathBuf> {
         self.config.clone()
     }

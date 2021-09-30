@@ -3,10 +3,9 @@ use std::net::TcpListener;
 use actix_web::dev::Server;
 use actix_web::web::{self, Data};
 use actix_web::{App, HttpServer};
+use settings::Settings;
 use sqlx::PgPool;
 use tracing_actix_web::TracingLogger;
-
-use settings::Settings;
 
 pub mod errors;
 pub mod routes;

@@ -1,6 +1,7 @@
-use crate::core::settings::{DatabaseSettings, LoadingOptions, SettingsLoader};
 use clap::{AppSettings, Clap, ValueHint};
 use serde::{Deserialize, Serialize};
+use settings_loader::common::database::DatabaseSettings;
+use settings_loader::{LoadingOptions, SettingsError, SettingsLoader};
 use std::fmt;
 use std::path::PathBuf;
 
@@ -33,6 +34,8 @@ pub struct LoaderCliOptions {
 }
 
 impl LoadingOptions for LoaderCliOptions {
+    type Error = SettingsError;
+
     fn config_path(&self) -> Option<PathBuf> {
         self.config.clone()
     }
@@ -63,7 +66,6 @@ pub enum SubCommand {
         /// Input propensity data file in CSV format
         #[clap(name = "FILE", parse(from_os_str), value_hint = ValueHint::AnyPath)]
         file: PathBuf,
-
         // /// Specify file to output propensity distribution visualization
         // #[clap(short, long, parse(from_os_str), value_hint = ValueHint::FilePath)]
         // distribution: Option<PathBuf>,

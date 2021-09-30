@@ -7,7 +7,7 @@ pub mod settings;
 #[non_exhaustive]
 pub enum LoaderError {
     #[error("{0}")]
-    SettingsError(#[from] crate::core::settings::SettingsError),
+    SettingsError(#[from] settings_loader::SettingsError),
 
     #[error("{0}")]
     CoreError(#[from] crate::core::CoreError),

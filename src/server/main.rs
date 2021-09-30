@@ -1,9 +1,9 @@
-use address_propensity::core::settings::SettingsLoader;
 use address_propensity::server::errors::PropensityError;
 use address_propensity::server::settings::{HttpServerCliOptions, Settings};
 use address_propensity::server::Application;
 use address_propensity::tracing::{get_subscriber, init_subscriber};
 use clap::Clap;
+use settings_loader::SettingsLoader;
 
 #[actix_web::main]
 async fn main() -> Result<(), PropensityError> {

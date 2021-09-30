@@ -1,14 +1,14 @@
 use std::fmt::Debug;
 
+use settings_loader::common::database::DatabaseSettings;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use thiserror::Error;
 
 pub mod domain;
-pub mod settings;
 
 #[tracing::instrument(level = "info")]
-pub async fn get_connection_pool(settings: &settings::DatabaseSettings) -> Result<PgPool, sqlx::Error> {
+pub async fn get_connection_pool(settings: &DatabaseSettings) -> Result<PgPool, sqlx::Error> {
     PgPoolOptions::new()
         .connect_timeout(std::time::Duration::from_secs(2))
         .connect_with(settings.with_db())

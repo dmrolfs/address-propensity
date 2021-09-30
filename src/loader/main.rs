@@ -1,8 +1,8 @@
-use address_propensity::core::settings::SettingsLoader;
 use address_propensity::loader::settings::{LoaderCliOptions, Settings, SubCommand};
 use address_propensity::loader::{propensity_loader, property_loader};
 use address_propensity::tracing::{get_subscriber, init_subscriber};
 use clap::Clap;
+use settings_loader::SettingsLoader;
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() {
@@ -19,9 +19,7 @@ async fn main() {
     let settings = Settings::load(options).expect("failed to load settings");
     match command {
         SubCommand::Property { file } => property_loader::load_property_data(file, settings).await,
-        SubCommand::Propensity { file } => {
-            propensity_loader::load_propensity_data(file, settings).await
-        }
+        SubCommand::Propensity { file } => propensity_loader::load_propensity_data(file, settings).await,
     }
     .expect(format!("failure in {} loading", command_label).as_str());
 }

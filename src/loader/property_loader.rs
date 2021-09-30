@@ -2,6 +2,8 @@ use crate::core::domain::property::{Property, PropertyRecordRepository};
 use crate::loader::domain::CsvProperty;
 use crate::loader::settings::Settings;
 use crate::loader::LoaderError;
+use progressing::mapping::Bar as MappingBar;
+use progressing::Baring;
 use sqlx::PgPool;
 use std::convert::TryInto;
 use std::fmt;
@@ -9,8 +11,6 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use validator::{Validate, ValidationErrors};
-use progressing::mapping::{Bar as MappingBar};
-use progressing::Baring;
 
 #[derive(Default)]
 struct QualityMeasure {
@@ -158,7 +158,10 @@ fn summarize(nr_saved_records: usize, file: &PathBuf, skipped: &[usize], quality
 
     if !skipped.is_empty() {
         let first: Vec<usize> = skipped.iter().take(10).copied().collect();
-        eprintln!(" {}", format!("indexes of first {} skipped csv records: {:?}", first.len(), first));
+        eprintln!(
+            " {}",
+            format!("indexes of first {} skipped csv records: {:?}", first.len(), first)
+        );
     }
 }
 
@@ -218,76 +221,3 @@ async fn do_save(pool: &PgPool, record: &Property, index: usize) -> Result<Prope
     tracing::info!("Saved RECORD[{}]: => {:?}", index, nr_updated,);
     Ok(nr_updated)
 }
-
-// #[tracing::instrument(level = "info")]
-// async fn do_load_property_data(file: PathBuf, settings: Settings) -> Result<(), LoaderError> {
-//     let mut reader = csv::Reader::from_path(&file)?;
-//     let mut deserialization_failures = vec![];
-//     let mut validation_failures = vec![];
-//
-//     let connection_pool = crate::core::get_connection_pool(&settings.database)
-//         .await
-//         .expect("Failed to connect to Postgres database.");
-//
-//     let mut nr_valid_records: usize = 0;
-//     tracing::info!("loading property records from source file: {:?}", file);
-//     for (pos, record) in reader.deserialize().enumerate() {
-//         let idx = pos + 1;
-//         let ingress: CsvProperty = match record {
-//             Ok(v) => v,
-//             Err(err) => {
-//                 tracing::error!(error=?err, record_index=%idx, "failed to load property record[{}]", idx);
-//                 deserialization_failures.push((idx, err));
-//                 continue;
-//             }
-//         };
-//         tracing::debug!(?ingress, "deserialized record[{}]", idx);
-//
-//         if let Err(err) = ingress.validate() {
-//             tracing::error!(error=?err, "property record[{}] failed initial validation", idx);
-//             validation_failures.push((idx, err));
-//             continue;
-//         }
-//         tracing::debug!(?ingress, "record[{}] validated", idx);
-//
-//         let property_record: Property = ingress.clone().try_into()?;
-//         nr_valid_records += 1;
-//         tracing::debug!(?property_record, %nr_valid_records, "csv record[{}] converted to save to database", idx);
-//
-//         match PropertyRecordRepository::find(&property_record.apn, &connection_pool).await {
-//             Err(err) => {
-//                 tracing::error!(error=?err, apn=?property_record.apn, "error looking while checking if property record[{}] was previously loaded.", idx);
-//                 continue;
-//             }
-//
-//             Ok(Some(record)) => {
-//                 tracing::info!(apn=?record.apn, "property record[{}] previously loaded - skipping", idx);
-//                 continue;
-//             }
-//
-//             Ok(None) => {
-//                 let mut transaction = connection_pool
-//                     .begin()
-//                     .await
-//                     .expect("Failed to acquire Postgres connection from the pool.");
-//                 let nr_updated = PropertyRecordRepository::save(&mut transaction, &property_record).await?;
-//                 transaction
-//                     .commit()
-//                     .await
-//                     .expect("Failed to commit SQL transaction to store loaded property records.");
-//                 tracing::info!("Saved RECORD[{}]: => {:?}", idx, nr_updated,);
-//             }
-//         }
-//     }
-//
-//     // transaction.commit().await.expect("Failed to commit SQL transaction to store loaded property records.");
-//     tracing::info!(
-//         "Saved {} records from {:?} with {} deserialization problems and {} validation issues",
-//         nr_valid_records,
-//         file,
-//         deserialization_failures.len(),
-//         validation_failures.len()
-//     );
-//
-//     Ok(())
-// }
