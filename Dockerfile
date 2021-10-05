@@ -1,5 +1,7 @@
 FROM lukemathwalker/cargo-chef:latest-rust-1.55 AS chef
+
 WORKDIR /app
+
 
 FROM chef AS planner
 COPY . .
@@ -25,9 +27,25 @@ RUN apt-get update -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/target/release/server server
+# Create appuser
+ENV USER=appuser
+ENV UID=10001
+
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid "${UID}" \
+    "${USER}"
+
+USER appuser:appuser
+
+COPY --from=builder /app/target/release/server propensity-server
 COPY resources resources
 ENV APP_ENVIRONMENT production
 ENV APP__DATABASE__HOST propensity_postgres
 ENV RUST_LOG info
-ENTRYPOINT ["./server", "-s", "resources/secrets.yaml"]
+ENTRYPOINT ["./propensity-server"]
+CMD ["-s", "resources/secrets.yaml"]
