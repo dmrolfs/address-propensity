@@ -4,7 +4,7 @@ use crate::core::domain::{
     Address, AddressLine, AssessorParcelNumber, City, GeoCoordinate, LandUseType, SecondaryAddressLine, StateOrRegion,
     StreetDirection, ZipOrPostalCode,
 };
-use crate::loader::LoaderError;
+use crate::loader::errors::LoaderError;
 use bigdecimal::{BigDecimal, FromPrimitive};
 use serde::{Deserialize, Serialize};
 use std::convert::TryInto;

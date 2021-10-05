@@ -1,7 +1,7 @@
 use crate::core::domain::property::{Property, PropertyRecordRepository};
 use crate::loader::domain::CsvProperty;
+use crate::loader::errors::LoaderError;
 use crate::loader::settings::Settings;
-use crate::loader::LoaderError;
 use progressing::mapping::Bar as MappingBar;
 use progressing::Baring;
 use sqlx::PgPool;

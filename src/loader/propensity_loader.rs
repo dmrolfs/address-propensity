@@ -3,8 +3,8 @@ use crate::core::domain::{
     PropensityScore, PropertyPropensityScore, PropertyPropensityScoreRepository, ZipOrPostalCode,
 };
 use crate::loader::domain::CsvPropertyPropensityScore;
+use crate::loader::errors::LoaderError;
 use crate::loader::settings::Settings;
-use crate::loader::LoaderError;
 use plotters::prelude::*;
 use progressing::mapping::Bar as MappingBar;
 use progressing::Baring;

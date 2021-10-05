@@ -269,24 +269,12 @@ Applied 20210921225524/migrate add apn indexes (4.782ms)
 Applied 20210921225951/migrate add zipcode to propensity (1.7929ms)
 </code></pre>
 
-9. then exit propensity-db-init container shell
-<pre><code>root@:/# exit</code></pre>
-
-10. Kill propensity-db-init container.
-<pre><code>> docker kill [propensity-db-init-container-id]</code></pre>
-
-11. Now that the database is initialized we can start the executable environment:
-<pre><code>> docker run -it -d --network propensity-network -p 8000:8000 address-propensity</code></pre>
-
-12. Enter the container:
-<pre><code>> docker exec -it [propensity-exec-container-id] /bin/bash</code></pre>
-
-13. From the container's shell, load property data:
+9. From the container's shell, load property data:
 <pre><code>root@:/app# ./loader -s resources/secrets.yaml property resources/data/core_property_data.csv > property_load.log</code></pre>
 You should see progress fill the screen and a summary of the load:
 <pre><code>Saved 10000 records from "resources/data/core_property_data.csv" (0 skipped) with 0 issues found</code></pre>
 
-14. From the container's shell, load propensity data:
+10. From the container's shell, load propensity data:
 <pre><code>root@:/app# ./loader -s resources/secrets.yaml propensity resources/data/propensity_scores.csv > propensity_load.log</code></pre>
 You should see progress fill the screen and a summary of the load:
 <pre><code>
@@ -297,21 +285,27 @@ You should see progress fill the screen and a summary of the load:
  Zipcode propensity population visualization was save to score_zipcode_distribution.png.
 </code></pre>
 
-15. As reported, in addition to the summary status of the load, visualizations of the loaded 
-propensity data are also generated and saved to the files 
-<code>propensity_score_distribution.png</code> and <code>score_zipcode_distribution.png</code>.
+11. As reported, in addition to the summary status of the load, visualizations of the loaded
+    propensity data are also generated and saved to the files
+    <code>propensity_score_distribution.png</code> and <code>score_zipcode_distribution.png</code>.
 
-16. From another terminal, you can copy the generated visualizations from the docker container:
-<pre><code>> docker cp [propensity-exec-container-id]:/app/propensity_score_distribution.png .</code></pre>
-<pre><code>> docker cp [propensity-exec-container-id]:/app//app/score_zipcode_distribution.png .</code></pre>
+12. From another terminal, you can copy the generated visualizations from the docker container:
+<pre><code>> docker cp [propensity-db-init-container-id]:/propensity_score_distribution.png .</code></pre>
+<pre><code>> docker cp [propensity-db-init-container-id]:/score_zipcode_distribution.png .</code></pre>
 
-17. Back in the propensity executable container's shell, start the API server:
-<pre><code>root@/app# ./server -s resources/secrets.yaml</code></pre>
+13. then exit propensity-db-init container shell
+<pre><code>root@:/# exit</code></pre>
 
-18. In a separate host shell (can be the one used to pull visualizations), use curl to query zipcode
+14. Kill propensity-db-init container.
+<pre><code>> docker kill [propensity-db-init-container-id]</code></pre>
+
+15. Now that the database and loaded is initialized we can start the executable environment:
+<pre><code>> docker run -it -d --network propensity-network -p 8000:8000 address-propensity</code></pre>
+
+16. In a separate host shell (can be the one used to pull visualizations), use curl to query zipcode
 propensity scores:
 <pre><code>> curl --location --request GET '127.0.0.1:8000/propensity?zip_code=98121&limit=3'</code></pre>
 You should see:
 <pre><code>[{"apn":"00006633050420","score":259,"address":{"address_line":{"street_number":"76","street_name":"CEDAR","street_suffix":"ST","street_direction":"None"},"secondary_address_line":{"designator":"UNIT","number":"509"},"city":"SEATTLE","state_or_region":"WA","zip_or_postal_code":{"code":"98121"},"locale":{"iso_3166_alpha_3":"USA","official_name":"UNITED STATES OF AMERICA"}}},{"apn":"00007656901080","score":221,"address":{"address_line":{"street_number":"2600","street_name":"2","street_suffix":"AVE","street_direction":"None"},"secondary_address_line":{"designator":"APT","number":"612"},"city":"SEATTLE","state_or_region":"WA","zip_or_postal_code":{"code":"98121"},"locale":{"iso_3166_alpha_3":"USA","official_name":"UNITED STATES OF AMERICA"}}},{"apn":"00003589004180","score":166,"address":{"address_line":{"street_number":"583","street_name":"BATTERY","street_suffix":"ST","street_direction":"None"},"secondary_address_line":{"designator":"APT","number":"510N"},"city":"SEATTLE","state_or_region":"WA","zip_or_postal_code":{"code":"98121"},"locale":{"iso_3166_alpha_3":"USA","official_name":"UNITED STATES OF AMERICA"}}}]</code></pre>
 
-19. Have fun experimenting!
+17. Have fun experimenting!

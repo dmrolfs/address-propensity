@@ -1,6 +1,6 @@
 use super::RE_APN;
 use crate::core::domain::{AssessorParcelNumber, PropensityScore, PropertyPropensityScore, ZipOrPostalCode};
-use crate::loader::LoaderError;
+use crate::loader::errors::LoaderError;
 use serde::{Deserialize, Serialize};
 use std::convert::TryInto;
 use validator::Validate;
