@@ -3,7 +3,7 @@ use crate::loader::domain::CsvProperty;
 use crate::loader::errors::LoaderError;
 use crate::loader::settings::Settings;
 use console::style;
-use indicatif::{ProgressBar, ProgressStyle};
+use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use sqlx::PgPool;
 use std::convert::TryInto;
 use std::fmt;
@@ -69,16 +69,14 @@ pub async fn load_property_data(file: PathBuf, settings: Settings) -> Result<(),
     tracing::info!("loading property records from source file: {:?}", file);
     eprintln!(" {}...", style("Loading property records").bold());
     let sty = ProgressStyle::default_bar()
-        .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}")
+        .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} eta:{eta} processing:{per_sec}")
         .progress_chars("##-");
 
     let progress = ProgressBar::new(nr_records as u64);
     progress.set_style(sty);
 
-    for (pos, record) in reader.deserialize().enumerate() {
+    for (pos, record) in reader.deserialize().enumerate().progress_with(progress) {
         let idx = pos + 1;
-        progress.set_message(format!("record #{}", idx));
-        progress.inc(1);
 
         let ingress: CsvProperty = match record {
             Ok(property) => property,
@@ -126,7 +124,6 @@ pub async fn load_property_data(file: PathBuf, settings: Settings) -> Result<(),
             nr_saved_records += 1;
         }
     }
-    progress.finish_with_message("done");
 
     summarize(nr_saved_records, &file, &skipped_records, &quality);
     Ok(())
@@ -143,7 +140,7 @@ fn summarize(nr_saved_records: usize, file: &PathBuf, skipped: &[usize], quality
             skipped.len(),
             quality
         ))
-            .bold()
+        .bold()
     );
     tracing::warn!(
         "Saved {} records from {:?} ({} skipped) with {:?}",
@@ -157,7 +154,12 @@ fn summarize(nr_saved_records: usize, file: &PathBuf, skipped: &[usize], quality
         let first: Vec<usize> = skipped.iter().take(10).copied().collect();
         eprintln!(
             " {}",
-            style(format!("indexes of first {} skipped csv records: {:?}", first.len(), first)).bold()
+            style(format!(
+                "indexes of first {} skipped csv records: {:?}",
+                first.len(),
+                first
+            ))
+            .bold()
         );
     }
 }

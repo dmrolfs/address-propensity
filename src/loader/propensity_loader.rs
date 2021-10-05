@@ -6,7 +6,7 @@ use crate::loader::domain::CsvPropertyPropensityScore;
 use crate::loader::errors::LoaderError;
 use crate::loader::settings::Settings;
 use console::style;
-use indicatif::{ProgressBar, ProgressStyle};
+use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use plotters::prelude::*;
 use sqlx::PgPool;
 use std::collections::HashMap;
@@ -87,16 +87,14 @@ pub async fn load_propensity_data(file: PathBuf, settings: Settings) -> Result<(
     tracing::info!("loading propensity records from source file: {:?}", file);
     eprintln!(" {}...", style("Loading propensity scores").bold());
     let sty = ProgressStyle::default_bar()
-        .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}")
+        .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} eta:{eta} processing:{per_sec}")
         .progress_chars("##-");
 
     let progress = ProgressBar::new(nr_records as u64);
     progress.set_style(sty);
 
-    for (pos, record) in reader.deserialize().enumerate() {
+    for (pos, record) in reader.deserialize().enumerate().progress_with(progress) {
         let idx = pos + 1;
-        progress.set_message(format!("record #{}", idx));
-        progress.inc(1);
 
         let record: Result<CsvPropertyPropensityScore, csv::Error> = record;
         let ingress = match record {
@@ -172,7 +170,6 @@ pub async fn load_propensity_data(file: PathBuf, settings: Settings) -> Result<(
             nr_saved_records += 1;
         }
     }
-    progress.finish_with_message("done");
 
     summarize(nr_saved_records, &file, &skipped_records, &quality);
     Ok(())
@@ -270,7 +267,7 @@ fn summarize(nr_saved_records: usize, file: &PathBuf, skipped: &[usize], quality
             skipped.len(),
             quality
         ))
-            .bold()
+        .bold()
     );
     tracing::warn!(
         "Saved {} records from {:?} ({} skipped) with {:?}",
@@ -375,7 +372,7 @@ fn visualize_zipcode_scores(score_zips: &Vec<(PropensityScore, Option<ZipOrPosta
             "Zipcode propensity population visualization was save to {}",
             out_filename
         ))
-            .bold()
+        .bold()
     );
     Ok(())
 }
