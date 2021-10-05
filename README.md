@@ -229,18 +229,19 @@ follow these steps:
 1. Start the Postgres database container.
 <pre><code>> ./scripts/create_db.sh</code></pre>
 
-2. Build Docker container used to initialize propensity database. This container is used only to
-provide a docker environment from which to set up the database for the demo. The system uses 
-sqlx, which is database connection library that, in addition to executing queries in the runtime, 
-provides a schema migrations capability, which was used.
+2. Build Docker container used to initialize and load propensity database. This container is used 
+only to provide a docker environment from which to set up the database and load data for the demo. 
+Rust can cross-compile to many platforms (MacOs, Windows, limux, and many, many more), but without 
+knowing your specific environment, the demo runs the loader executable in this container. The system 
+uses sqlx, which is database connection library that, in addition to executing queries in the 
+runtime, provides a schema migrations capability, which was used. Another cool feature of sqlx is 
+that queries can be compile-time checked against the schema! 
 <pre><code>> docker build --tag propensity-db-init --file Database.Dockerfile .</code></pre>
 
-3. Build loader and server executable container. The result is not what we would target for a
-production environment. Normally I would target a secure, slim base image -- e.g., alpine, 
-debian:slim-buster, etc -- and the loader executable would be used locally. Rust can cross-compile
-to many platforms (MacOs, Windows, limux, and many, many more), but without knowing your specific
-environment, the demo runs the loader executable in the resulting container. Also, I would not leave
-the root user, among other security best practices.
+3. Build server executable container. The resulting container is not completely what we 
+would target for a production environment. We can further reduce the image size (currently 99.5MB)
+with a different base -- e.g., scratch, alpine, etc. Also, I would not leave the root user, among
+other security best practices.
 <pre><code>> docker build --tag address-propensity --file Dockerfile .</code></pre>
 
 4. Create the docker network used to link application and database containers
