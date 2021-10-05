@@ -5,9 +5,9 @@ use crate::core::domain::{
 use crate::loader::domain::CsvPropertyPropensityScore;
 use crate::loader::errors::LoaderError;
 use crate::loader::settings::Settings;
+use console::style;
+use indicatif::{ProgressBar, ProgressStyle};
 use plotters::prelude::*;
-use progressing::mapping::Bar as MappingBar;
-use progressing::Baring;
 use sqlx::PgPool;
 use std::collections::HashMap;
 use std::convert::TryInto;
@@ -85,21 +85,18 @@ pub async fn load_propensity_data(file: PathBuf, settings: Settings) -> Result<(
     let mut nr_saved_records: usize = 0;
 
     tracing::info!("loading propensity records from source file: {:?}", file);
-    eprintln!(" {}...", "Loading propensity scores");
-    // let sty = ProgressStyle::default_bar()
-    //     .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}")
-    //     .progress_chars("##-");
-    //
-    // let progress = ProgressBar::new(nr_records as u64);
-    // progress.set_style(sty);
-    let mut progress = MappingBar::with_range(0, nr_records).timed();
-    progress.set_len(100);
+    eprintln!(" {}...", style("Loading propensity scores").bold());
+    let sty = ProgressStyle::default_bar()
+        .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}")
+        .progress_chars("##-");
+
+    let progress = ProgressBar::new(nr_records as u64);
+    progress.set_style(sty);
 
     for (pos, record) in reader.deserialize().enumerate() {
         let idx = pos + 1;
-        // progress.set_message(format!("record #{}", idx));
-        progress.set(idx);
-        eprintln!("{}", progress);
+        progress.set_message(format!("record #{}", idx));
+        progress.inc(1);
 
         let record: Result<CsvPropertyPropensityScore, csv::Error> = record;
         let ingress = match record {
@@ -175,7 +172,7 @@ pub async fn load_propensity_data(file: PathBuf, settings: Settings) -> Result<(
             nr_saved_records += 1;
         }
     }
-    // progress.finish_with_message("done");
+    progress.finish_with_message("done");
 
     summarize(nr_saved_records, &file, &skipped_records, &quality);
     Ok(())
@@ -266,13 +263,14 @@ async fn do_assess_for_property(pool: &PgPool, record: &PropertyPropensityScore)
 fn summarize(nr_saved_records: usize, file: &PathBuf, skipped: &[usize], quality: &QualityMeasure) {
     eprintln!(
         " {}",
-        format!(
+        style(format!(
             "Saved {} records from {:?} ({} skipped) with {:?}",
             nr_saved_records,
             file,
             skipped.len(),
             quality
-        )
+        ))
+            .bold()
     );
     tracing::warn!(
         "Saved {} records from {:?} ({} skipped) with {:?}",
@@ -318,7 +316,7 @@ fn visualize_score_distribution(score_zips: &Vec<(PropensityScore, Option<ZipOrP
     background.present().expect("Unable to write result to file");
     eprintln!(
         " {}.",
-        format!("Propensity score visualization was saved to {}", out_filename)
+        style(format!("Propensity score visualization was saved to {}", out_filename)).bold()
     );
     Ok(())
 }
@@ -373,10 +371,11 @@ fn visualize_zipcode_scores(score_zips: &Vec<(PropensityScore, Option<ZipOrPosta
     background.present().expect("Unable to write result ro file");
     eprintln!(
         " {}.",
-        format!(
+        style(format!(
             "Zipcode propensity population visualization was save to {}",
             out_filename
-        )
+        ))
+            .bold()
     );
     Ok(())
 }
