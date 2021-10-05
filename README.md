@@ -238,10 +238,9 @@ runtime, provides a schema migrations capability, which was used. Another cool f
 that queries can be compile-time checked against the schema! 
 <pre><code>> docker build --tag propensity-db-init --file Database.Dockerfile .</code></pre>
 
-3. Build server executable container. The resulting container is not completely what we 
-would target for a production environment. We can further reduce the image size (currently 99.5MB)
-with a different base -- e.g., scratch, alpine, etc. Also, I would not leave the root user, among
-other security best practices.
+3. Build server executable container. The resulting container is pretty good for a production
+environment. It is less than 100MB in size in a somewhat minimal base and with no root user. We can 
+get it smaller - perhaps to around 20MB by building to a base such as scratch or alpine. 
 <pre><code>> docker build --tag address-propensity --file Dockerfile .</code></pre>
 
 4. Create the docker network used to link application and database containers
