@@ -13,6 +13,7 @@ use validator::{Validate, ValidationErrors};
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Address {
     pub address_line: AddressLine,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub secondary_address_line: Option<SecondaryAddressLine>,
     pub city: City,
     pub state_or_region: StateOrRegion,

@@ -12,6 +12,7 @@ use std::convert::TryInto;
 
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct PropensityScoresParameters {
+    #[serde(default)]
     pub limit: Option<u16>,
 
     #[serde(alias = "zip")]
@@ -50,7 +51,7 @@ pub struct PropensitySearchItem {
     pub apn: AssessorParcelNumber,
     #[serde(flatten)]
     pub propensity_score: PropensityScore,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub address: Option<Address>,
 }
 
